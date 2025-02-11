@@ -1,0 +1,50 @@
+body{
+    background: linear-gradient(rgb(203, 186, 186),rgb(94, 87, 87));
+    height: 100vh;
+    width: 100vw;
+}
+
+#opiniao{
+    color: white;
+    text-align: center;
+    font-size: 30px;
+    padding: 10px 20px 30px 10px; 
+    transform: scale(0.6);
+}
+#opiniao:hover{
+    box-shadow: 10px 0px 150px rgb(175, 50, 50); 
+    background:radial-gradient(blue,black);
+    transform: scale(0.7);
+    transition: 1s;
+    padding: 5px 10px 5px 10px;
+    margin-top: 0px;
+}
+.opiniao_legenda{
+    font-size: 50px;
+    padding: 0 0 20px 0;
+}
+.espaçamento_opiniao{
+    display: flex;
+}
+.selecionar{
+    width: 500px;
+    text-align: center;
+    height: 50px;
+    font-size: 30px;
+    margin-right: 200px;
+    margin-left: 200px;
+}
+.enviar{
+    width: 30%;
+    height: 50px;
+    margin-top: 30px;
+    font-size: 30px;
+}
+.enviar:hover{
+    width: 50%;
+    height: 70px;
+    background-color: blue;
+    color: white;
+    box-shadow: 40px 0px 300px rgb(255, 255, 255); 
+    border: solid 2px white;
+}
