@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cronograma Escolar com Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0; padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #2c3e50;
+      margin: 20px 0;
+    }
+    /* Login */
+    #loginSection {
+      margin-top: 100px;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+    #loginSection input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    #loginSection button {
+      width: 100%;
+      padding: 10px;
+      background: #2980b9;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #loginError {
+      color: red;
+      margin-top: 10px;
+      display: none;
+    }
+    /* Cronograma */
+    #scheduleSection {
+      width: 90%;
+      max-width: 900px;
+      margin: 20px auto;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px 10px;
+      text-align: center;
+      cursor: default;
+    }
+    th {
+      background: #2980b9;
+      color: white;
+      font-weight: 600;
+    }
+    td.editable {
+      cursor: pointer;
+      background-color: #f0f8ff;
+      transition: background-color 0.3s;
+    }
+    td.editable:hover {
+      background-color: #d1e7fd;
+    }
+    /* Info box */
+    #infoBox {
+      background: #2980b9;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      min-height: 40px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    /* Buttons */
+    #logoutBtn {
+      background: #c0392b;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      align-self: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cronograma Escolar</h1>
+
+  <!-- Login -->
+  <section id="loginSection">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Usuário" autocomplete="off" />
+    <input type="password" id="password" placeholder="Senha" autocomplete="off" />
+    <button id="loginBtn">Entrar</button>
+    <div id="loginError">Usuário ou senha incorretos.</div>
+  </section>
+
+  <!-- Cronograma -->
+  <section id="scheduleSection">
+    <button id="logoutBtn">Logout</button>
+    <div id="infoBox"></div>
+    <table id="scheduleTable">
+      <thead>
+        <tr>
+          <th>Horário</th>
+          <th>Segunda</th>
+          <th>Terça</th>
+          <th>Quarta</th>
+          <th>Quinta</th>
+          <th>Sexta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Linhas geradas via JS -->
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    // Usuários pré-definidos (em app real, isso viria do backend)
+    const users = [
+      { username: 'admin', password: 'admin123', role: 'admin' },
+      { username: 'aluno', password: 'aluno123', role: 'student' }
+    ];
+
+    // Cronograma inicial (12 ideias resumidas)
+    let scheduleData = [
+      { time: '08:00 - 09:00', seg: 'Matemática', ter: 'Português', qua: 'Ciências', qui: 'História', sex: 'Educação Física' },
+      { time: '09:00 - 10:00', seg: 'Intervalo', ter: 'Intervalo', qua: 'Intervalo', qui: 'Intervalo', sex: 'Intervalo' },
+      { time: '10:00 - 11:00', seg: 'Artes', ter: 'Inglês', qua: 'Projeto', qui: 'Tecnologia', sex: 'Revisão' },
+      { time: '11:00 - 12:00', seg: 'Atendimento', ter: 'Atendimento', qua: 'Atendimento', qui: 'Atendimento', sex: 'Atendimento' },
+      { time: '12:00 - 13:00', seg: 'Almoço', ter: 'Almoço', qua: 'Almoço', qui: 'Almoço', sex: 'Almoço' },
+      { time: '13:00 - 14:00', seg: 'Estudos Independentes', ter: 'Música', qua: 'Dinâmica', qui: 'Preparação', sex: 'Eventos' },
+      { time: '14:00 - 15:00', seg: 'Avaliações', ter: 'Trabalho em Grupo', qua: 'Plataformas', qui: 'Projeto', sex: 'Feedback' }
+    ];
+
+    const loginSection = document.getElementById('loginSection');
+    const scheduleSection = document.getElementById('scheduleSection');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginError = document.getElementById('loginError');
+    const infoBox = document.getElementById('infoBox');
+    const scheduleTableBody = document.querySelector('#scheduleTable tbody');
+
+    let currentUser = null;
+
+    // Renderiza cronograma na tabela
+    function renderSchedule(editable = false) {
+      scheduleTableBody.innerHTML = ''; // limpa tabela
+
+      scheduleData.forEach((row, rowIndex) => {
+        const tr = document.createElement('tr');
+
+        // Horário (não editável)
+        const tdTime = document.createElement('td');
+        tdTime.textContent = row.time;
+        tr.appendChild(tdTime);
+
+        // Dias da semana
+        ['seg', 'ter', 'qua', 'qui', 'sex'].forEach(day => {
+          const td = document.createElement('td');
+          td.textContent = row[day];
+
+          if (editable && row[day] !== 'Almoço') {
+            td.classList.add('editable');
+            td.title = 'Clique para editar';
+            td.contentEditable = false;
+
+            // Clique para ativar edição
+            td.addEventListener('click', () => {
+              td.contentEditable = true;
+              td.focus();
+            });
+
+            // Ao sair do foco, salva alteração
+            td.addEventListener('blur', () => {
+              td.contentEditable = false;
+              scheduleData[rowIndex][day] = td.textContent.trim() || ' ';
+              infoBox.textContent = `Atividade atualizada: ${td.textContent.trim()}`;
+            });
+
+            // Enter para finalizar edição
+            td.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                td.blur();
+              }
+            });
+          } else {
+            // Para alunos, mostra info ao clicar
+            if (!editable) {
+              td.style.cursor = 'pointer';
+              td.addEventListener('click', () => {
+                infoBox.textContent = `Horário: ${row.time} - Atividade: ${td.textContent}`;
+              });
+            }
+          }
+
+          tr.appendChild(td);
+        });
+
+        scheduleTableBody.appendChild(tr);
+      });
+    }
+
+    // Login
+    loginBtn.addEventListener('click', () => {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (user) {
+        currentUser = user;
+        loginSection.style.display = 'none';
+        scheduleSection.style.display = 'flex';
+        infoBox.textContent = '';
+
+        if (user.role === 'admin') {
+          renderSchedule(true); // admin pode editar
+          infoBox.textContent = 'Você está na área do Administrador. Clique nas células para editar.';
+        } else {
+          renderSchedule(false); // aluno só visualiza
+          infoBox.textContent = 'Você está na área do Aluno. Clique nas atividades para ver detalhes.';
+        }
+        loginError.style.display = 'none';
+      } else {
+        loginError.style.display = 'block';
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+      currentUser = null;
+      loginSection.style.display = 'block';
+      scheduleSection.style.display = 'none';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      loginError.style.display = 'none';
+      infoBox.textContent = '';
+    });
+
+  </script>
+</body>
+</html>
